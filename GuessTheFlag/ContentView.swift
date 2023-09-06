@@ -37,6 +37,10 @@ struct ContentView: View {
     @State private var score = 0
     @State private var highestScore = 0
     
+    @State private var angleDegrees = 0.0
+    @State private var wrongAnswerOpacity = 1.0
+    @State private var wrongAnswerScale = 1.0
+    
     @State private var countries = [
         "Estonia",
         "France",
@@ -75,7 +79,14 @@ struct ContentView: View {
                         Button {
                             flagTapped(number)
                         } label: {
-                            FlagImage(countryName: countries[number])
+                            if correctAnswer == number {
+                                FlagImage(countryName: countries[number])
+                                    .rotation3DEffect(.degrees(angleDegrees), axis: (x: 0, y: 1, z: 0))
+                            } else {
+                                FlagImage(countryName: countries[number])
+                                    .opacity(wrongAnswerOpacity)
+                                    .scaleEffect(wrongAnswerScale)
+                            }
                         }
                     }
                 }
@@ -83,7 +94,8 @@ struct ContentView: View {
                 .background(.thinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
             }
-        }.alert(scoreTitle, isPresented: $showingScore, actions: {
+        }
+        .alert(scoreTitle, isPresented: $showingScore, actions: {
             Button("Continue") {
                 askQuestion()
             }
@@ -95,6 +107,9 @@ struct ContentView: View {
     
     private func flagTapped(_ number: Int) {
         if number == correctAnswer {
+            withAnimation(.easeOut(duration: 0.5)) {
+                angleDegrees += 360
+            }
             score += 1
             scoreTitle = "Correct"
             highestScore = score > highestScore ? score : highestScore
@@ -102,12 +117,18 @@ struct ContentView: View {
             scoreTitle = "Wrong"
             score = 0
         }
+        withAnimation(.easeOut(duration: 0.5)) {
+            wrongAnswerOpacity = 0.25
+            wrongAnswerScale = 0.75
+        }
         showingScore = true
     }
     
     private func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        wrongAnswerOpacity = 1
+        wrongAnswerScale = 1
     }
 }
 
